@@ -199,6 +199,6 @@ WS   /ws/{session_id}               → Real-time progress stream
 
 ---
 
-*Built for the Hourglass AI Agent Challenge · May 2026*
+
 
 **You spoke. It shipped.**
