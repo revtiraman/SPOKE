@@ -69,7 +69,7 @@ class ExecutorAgent:
             env["PYTHONUNBUFFERED"] = "1"
 
             proc = await asyncio.create_subprocess_exec(
-                "python", tmp_path, "--mode", "demo",
+                "python3", tmp_path, "--mode", "demo",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env=env,
