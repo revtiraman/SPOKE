@@ -1,0 +1,51 @@
+# Environment & secrets
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Storage (runtime data — not committed)
+storage/sessions.db
+storage/ordersync_cache.db
+storage/business_memory.db
+storage/generated/
+storage/frames/
+storage/demo_output.csv
+
+# Media uploads
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mp3
+*.wav
+*.m4a
+*.zip
+
+# Logs
+logs/
+*.log
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/

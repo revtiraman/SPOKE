@@ -1,0 +1,53 @@
+"""
+{agent_name} — Email Processing Agent
+Built by Spoke | "You spoke. It shipped."
+
+{agent_description}
+"""
+
+import argparse
+import asyncio
+import os
+from datetime import datetime
+
+from dotenv import load_dotenv
+from loguru import logger
+from rich.console import Console
+from rich.table import Table
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+load_dotenv()
+
+console = Console()
+
+# Configuration
+POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SECONDS", "60"))
+LOG_FILE = os.getenv("LOG_FILE", "logs/{agent_name_lower}.log")
+logger.add(LOG_FILE, format="{{time}} | {{level}} | {{message}}", level="INFO")
+
+
+async def demo() -> None:
+    """Demo mode — zero credentials required."""
+    # SPOKE_DEMO: demo mode
+    console.print("[bold blue]🤖 {agent_name} — Demo Mode[/bold blue]")
+    console.print("[dim]Built by Spoke | You spoke. It shipped.[/dim]\n")
+    console.print("[green]✓[/green] Scanning for emails...")
+    await asyncio.sleep(1)
+    console.print("[green]✓[/green] Found 3 matching emails")
+    console.print("[green]✓[/green] Processed all items successfully")
+
+
+async def main() -> None:
+    """Production mode — requires real credentials."""
+    # SPOKE_PRODUCTION: requires credentials
+    console.print("[bold green]🤖 {agent_name} — Production Mode[/bold green]")
+    while True:
+        console.print(f"[dim]Running at {{datetime.now().strftime('%H:%M:%S')}}...[/dim]")
+        await asyncio.sleep(POLL_INTERVAL)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=["demo", "production"], default="demo")
+    args = parser.parse_args()
+    asyncio.run(demo() if args.mode == "demo" else main())

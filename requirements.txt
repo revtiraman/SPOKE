@@ -1,0 +1,58 @@
+# ── Web Framework ─────────────────────────────────────────
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+python-multipart==0.0.9
+aiofiles==23.2.1
+websockets==12.0
+httpx==0.26.0
+
+# ── AI / LLM ──────────────────────────────────────────────
+anthropic==0.21.3
+huggingface_hub==0.21.3
+openai==1.13.3
+transformers==4.38.2
+tokenizers==0.15.2
+
+# ── Transcription ─────────────────────────────────────────
+openai-whisper==20231117
+ffmpeg-python==0.2.0
+
+# ── Sandbox ───────────────────────────────────────────────
+e2b==0.17.1
+
+# ── Data Validation ───────────────────────────────────────
+pydantic==2.6.3
+pydantic-settings==2.2.1
+
+# ── Utilities ─────────────────────────────────────────────
+python-dotenv==1.0.1
+loguru==0.7.2
+tenacity==8.2.3
+rich==13.7.1
+typer==0.9.0
+
+# ── Frontend ──────────────────────────────────────────────
+streamlit==1.32.2
+streamlit-extras==0.3.6
+streamlit-lottie==0.0.5
+
+# ── Storage ───────────────────────────────────────────────
+aiosqlite==0.20.0
+
+# ── Code Tools ────────────────────────────────────────────
+black==24.2.0
+isort==5.13.2
+
+# ── Testing ───────────────────────────────────────────────
+pytest==8.0.2
+pytest-asyncio==0.23.5
+pytest-mock==3.12.0
+
+# ── SPOKE Genesis v2.0 ────────────────────────────────────
+# Multimodal Tool Detection (optional — enables video OCR)
+Pillow>=10.2.0
+# pytesseract>=0.3.10   # requires: brew install tesseract
+# opencv-python>=4.9.0  # uncomment for video frame extraction
+
+# Simulation / Statistics
+numpy>=1.26.0
