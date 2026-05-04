@@ -355,7 +355,7 @@ def screen_landing():
           <div style="font-size:.8rem;color:#64748b">MP4 · MOV · WebM · max 3min</div>
         </div>
         """, unsafe_allow_html=True)
-        uploaded = st.file_uploader("", type=["mp4","mov","webm","avi","mp3","wav"], label_visibility="collapsed")
+        uploaded = st.file_uploader("Upload video or audio file", type=["mp4","mov","webm","avi","mp3","wav"], label_visibility="collapsed")
         if uploaded:
             st.session_state.uploaded_file = uploaded
             go("upload_confirm")
@@ -415,7 +415,7 @@ def screen_text_input():
     example = ("Every day I get 10-15 order emails in Gmail. I manually open each one, "
                "read the customer name, product, quantity, and price, then type it into "
                "Google Sheets. It takes about 2 hours every day.")
-    text = st.text_area("", value="", height=160, placeholder=f"e.g. {example}", label_visibility="collapsed")
+    text = st.text_area("Problem description", value="", height=160, placeholder=f"e.g. {example}", label_visibility="collapsed")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -510,7 +510,7 @@ def screen_clarify():
           <div style="color:#a78bfa;font-size:.75rem;font-weight:600;margin-bottom:4px">QUESTION {i+1}</div>
           <div style="color:#e2e8f0">{q}</div>
         </div>""", unsafe_allow_html=True)
-        answers[q] = st.text_input(f"", key=f"ans_{i}", label_visibility="collapsed")
+        answers[q] = st.text_input(f"Answer {i+1}", key=f"ans_{i}", label_visibility="collapsed")
 
     if st.button("Continue →", use_container_width=True):
         if all(answers.values()):
@@ -615,7 +615,7 @@ def screen_live():
     st.markdown("<p style='color:#64748b;font-size:.85rem'>Paste any email text. Watch the agent extract structured data instantly.</p>", unsafe_allow_html=True)
 
     sample = "Hi there! I'd like to order 3x Blue Widget Pro for $74.97. My name is Jordan Smith. Order #2026-0042. Please confirm."
-    test_input = st.text_area("", height=80, placeholder=sample, key="test_email_text", label_visibility="collapsed")
+    test_input = st.text_area("Paste email text", height=80, placeholder=sample, key="test_email_text", label_visibility="collapsed")
     if st.button("⚡ Extract Now →", use_container_width=True):
         if test_input.strip():
             with st.spinner("Extracting..."):

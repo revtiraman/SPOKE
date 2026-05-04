@@ -629,7 +629,7 @@ def screen_landing():
           <div style="font-weight:700;color:#e2e8f0">Upload Video</div>
           <div style="font-size:.8rem;color:#64748b">AI reads your screen + voice</div>
         </div>""", unsafe_allow_html=True)
-        uploaded = st.file_uploader("", type=["mp4","mov","webm","avi","mp3","wav"],
+        uploaded = st.file_uploader("Upload video or audio", type=["mp4","mov","webm","avi","mp3","wav"],
                                     label_visibility="collapsed", key="genesis_upload")
         if uploaded:
             import tempfile
@@ -685,7 +685,7 @@ def screen_text_input():
     example = ("Every day I get 10-15 order emails in Gmail. I manually open each one, "
                "read the customer name, product, quantity, and price, then type it into "
                "Google Sheets. It takes about 2 hours every day.")
-    text = st.text_area("", height=160, placeholder=f"e.g. {example}", label_visibility="collapsed")
+    text = st.text_area("Problem description", height=160, placeholder=f"e.g. {example}", label_visibility="collapsed")
 
     col1, col2 = st.columns(2)
     with col1:
