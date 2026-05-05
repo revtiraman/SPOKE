@@ -35,7 +35,32 @@ ABSOLUTE REQUIREMENTS:
    - rich for terminal formatting (tables, panels, progress)
    - Environment variables via python-dotenv
 
-5. ERROR HANDLING
+5. AVAILABLE PACKAGES — USE ONLY THESE (critical — no pip install available at runtime)
+   stdlib only + these third-party packages:
+   - pydantic (v2)         → data models
+   - loguru                → logging
+   - tenacity              → retry/backoff
+   - rich                  → terminal output (tables, panels, progress)
+   - python-dotenv         → environment variables
+   - httpx                 → async HTTP calls (use this for ALL API calls)
+   - aiosqlite             → async SQLite (use for local storage/caching)
+   - aiofiles              → async file I/O
+   - numpy                 → numerical operations
+   - fastapi / uvicorn     → if building a server
+
+   FORBIDDEN — will cause ModuleNotFoundError:
+   - googleapiclient, google-auth, google.oauth2, google.auth  → NOT installed
+   - requests → use httpx instead
+   - pandas → use stdlib csv or list/dict instead
+   - openai, anthropic → NOT available
+   - selenium, playwright → NOT installed
+   - boto3, paramiko → NOT installed
+
+   For Gmail integration: use httpx to call Gmail REST API directly
+   For Google Sheets: use httpx to call Sheets REST API directly
+   Show credential setup instructions in comments, use mock data in demo()
+
+6. ERROR HANDLING
    - Every external API call wrapped in try/except
    - Network errors: retry with exponential backoff
    - Auth errors: clear error message + graceful shutdown

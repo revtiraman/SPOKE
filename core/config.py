@@ -10,8 +10,10 @@ BASE_DIR = Path(__file__).parent.parent
 
 
 class Settings(BaseSettings):
-    # HuggingFace
+    # LLM API keys
     hf_api_token: str = Field(default="", alias="HF_API_TOKEN")
+    openrouter_api_key: str = Field(default="", alias="OPENROUTER_API_KEY")
+    google_api_key: str = Field(default="", alias="GOOGLE_API_KEY")
 
     # Models
     main_brain_model: str = Field(default="moonshotai/Kimi-K2-Instruct", alias="MAIN_BRAIN_MODEL")
@@ -56,7 +58,16 @@ class Settings(BaseSettings):
 
     @property
     def hf_base_url(self) -> str:
-        return "https://api-inference.huggingface.co/v1"
+        t = self.hf_api_token
+        if t.startswith("gsk_"):
+            return "https://api.groq.com/openai"          # Groq (free)
+        if t.startswith("sk-or-"):
+            return "https://openrouter.ai/api"             # OpenRouter
+        if t.startswith("csk-"):
+            return "https://api.cerebras.ai"               # Cerebras
+        if t.startswith("together_"):
+            return "https://api.together.xyz"              # Together.ai
+        return "https://router.huggingface.co"             # HuggingFace
 
     @property
     def has_hf(self) -> bool:

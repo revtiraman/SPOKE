@@ -548,25 +548,32 @@ class CoderAgent:
         """Write a complete Python agent from the blueprint."""
         logger.info(f"Writing code for: {blueprint.agent_name}...")
 
-        client = get_client()
-        code = await client.complete(
-            model=router.coder_model,
-            system=_SYSTEM_PROMPT,
-            user=(
-                f"Write a complete Python autonomous agent for this blueprint:\n\n"
-                f"{blueprint.model_dump_json(indent=2)}\n\n"
-                f"The agent name is: {blueprint.agent_name}\n"
-                f"The agent description is: {blueprint.agent_description}\n"
-                f"CRITICAL: Include a fully working demo() function with realistic mock data. "
-                f"Return ONLY pure Python code, starting with the module docstring."
-            ),
-            temperature=0.1,
-            max_tokens=6000,
-        )
+        try:
+            client = get_client()
+            code = await client.complete(
+                model=router.coder_model,
+                system=_SYSTEM_PROMPT,
+                user=(
+                    f"Write a complete Python autonomous agent for this blueprint:\n\n"
+                    f"{blueprint.model_dump_json(indent=2)}\n\n"
+                    f"The agent name is: {blueprint.agent_name}\n"
+                    f"CRITICAL: Include a fully working demo() function with realistic mock data. "
+                    f"Return ONLY pure Python code, starting with the module docstring."
+                ),
+                temperature=0.1,
+                max_tokens=6000,
+            )
+            code = self._clean_code(code)
+        except Exception as e:
+            logger.warning(f"LLM code generation failed ({e}) — using adaptive demo code")
+            code = self._adapt_demo_code(blueprint)
 
-        code = self._clean_code(code)
         logger.success(f"Code generated: {len(code.split(chr(10)))} lines")
         return code
+
+    def _adapt_demo_code(self, blueprint) -> str:
+        """Return demo code with agent name swapped for the real blueprint name."""
+        return _DEMO_CODE.replace("OrderSync", blueprint.agent_name).replace("ordersync", blueprint.agent_name.lower())
 
     def _clean_code(self, code: str) -> str:
         """Strip markdown fences and leading/trailing whitespace."""

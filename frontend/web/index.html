@@ -353,6 +353,10 @@ nav{
 .run-track{background:var(--s07);border-radius:99px;height:3px;overflow:hidden}
 .run-fill{height:100%;background:linear-gradient(90deg,var(--indigo),#818cf8);border-radius:99px;width:0;transition:width .5s ease}
 .run-pct{font-size:12px;color:var(--s30);font-family:var(--mono);text-align:right;margin-top:8px}
+.run-finalizing{display:none;margin-top:24px;padding:16px 20px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:var(--r);display:flex;align-items:center;gap:12px}
+.fin-dot{width:8px;height:8px;border-radius:50%;background:var(--indigo);animation:finPulse 1.2s ease-in-out infinite}
+@keyframes finPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+.fin-txt{font-size:12px;color:var(--s50);font-family:var(--mono)}
 
 /* ─── RESULT SCREEN ─────────────────────────────────────────────────────────── */
 #screen-result{min-height:100vh;background:var(--black)}
@@ -574,6 +578,76 @@ textarea.ti-input::placeholder{color:var(--s30)}
 .ti-actions{display:flex;gap:10px;align-items:center;margin-top:14px}
 .ti-hint{font-size:11px;color:var(--s30);margin-top:12px;font-family:var(--mono)}
 
+/* ─── INPUT SCREEN (record / upload / type) ────────────────────────────────── */
+.inp-wrap{max-width:680px;margin:0 auto;padding:160px 32px 80px;text-align:center}
+.inp-title{font-size:clamp(28px,4vw,46px);font-weight:900;letter-spacing:-2px;margin-bottom:10px}
+.inp-sub{font-size:15px;color:var(--s50);line-height:1.65;margin-bottom:40px;max-width:480px;margin-left:auto;margin-right:auto}
+.inp-tabs{display:flex;gap:2px;background:var(--s04);border:1px solid var(--s07);border-radius:var(--r);padding:4px;margin-bottom:32px;width:fit-content;margin-left:auto;margin-right:auto}
+.inp-tab{font-size:13px;font-weight:500;color:var(--s30);background:transparent;border:none;border-radius:7px;padding:9px 20px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap}
+.inp-tab.active{color:var(--white);background:var(--s07)}
+.inp-tab svg{flex-shrink:0}
+.inp-panel{display:none;text-align:left}
+.inp-panel.active{display:block}
+
+/* ── Record panel ── */
+.rec-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;padding:8px 0}
+.rec-ring{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+.rec-ring-svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.rec-btn{
+  width:88px;height:88px;border-radius:50%;background:#ef4444;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .25s;z-index:1;position:relative;
+  box-shadow:0 0 0 0 rgba(239,68,68,0);
+}
+.rec-btn:hover{background:#dc2626;transform:scale(1.05)}
+.rec-btn.recording{background:#dc2626;animation:recPulse 1.2s ease infinite}
+.rec-btn.done{background:var(--green);animation:none;box-shadow:0 0 20px rgba(34,197,94,.3)}
+@keyframes recPulse{
+  0%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}
+  70%{box-shadow:0 0 0 28px rgba(239,68,68,0)}
+  100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+}
+.rec-timer{font-size:40px;font-weight:900;letter-spacing:-2px;font-family:var(--mono);color:var(--white);line-height:1;min-height:48px;text-align:center}
+.rec-hint{font-size:12px;color:var(--s30);text-align:center;height:16px}
+.rec-canvas-wrap{width:100%;height:0;background:var(--s02);border:0 solid var(--s07);border-radius:var(--rSm);overflow:hidden;opacity:0;transition:height .3s,opacity .3s,border-width .3s}
+.rec-canvas-wrap.visible{height:52px;opacity:1;border-width:1px}
+#recCanvas{width:100%;height:100%}
+.rec-ready{
+  width:100%;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);
+  padding:16px 20px;display:none;
+}
+.rec-ready.show{display:block}
+.rec-ready-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:6px}
+.rec-ready-txt{font-size:13px;color:var(--s50);line-height:1.6}
+.rec-actions{width:100%;display:flex;flex-direction:column;gap:8px;display:none}
+.rec-actions.show{display:flex}
+
+/* ── Upload panel ── */
+.upl-zone{
+  border:2px dashed var(--s12);border-radius:var(--rLg);padding:52px 32px;
+  transition:all .25s;text-align:center;position:relative;cursor:pointer;
+}
+.upl-zone:hover,.upl-zone.drag{border-color:rgba(99,102,241,.45);background:rgba(99,102,241,.04)}
+.upl-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upl-icon{margin:0 auto 16px;color:var(--s30);width:44px;height:44px}
+.upl-main{font-size:15px;font-weight:600;margin-bottom:6px}
+.upl-sub{font-size:12px;color:var(--s30);margin-bottom:8px}
+.upl-fmt{font-size:11px;color:rgba(99,102,241,.7);font-family:var(--mono)}
+.upl-file-card{
+  display:none;align-items:center;gap:14px;background:rgba(34,197,94,.05);
+  border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:14px 18px;margin-top:14px;
+}
+.upl-file-card.show{display:flex}
+.upl-fname{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upl-fsize{font-size:11px;color:var(--s30);font-family:var(--mono)}
+.upl-actions{display:none;flex-direction:column;gap:8px;margin-top:14px}
+.upl-actions.show{display:flex}
+
+/* ── Shared ── */
+.inp-fullbtn{width:100%;font-size:14px;font-weight:600;padding:13px}
+.inp-or{display:flex;align-items:center;gap:16px;margin:28px 0;color:var(--s30);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.inp-or::before,.inp-or::after{content:'';flex:1;height:1px;background:var(--s07)}
+
 /* ─── RESPONSIVE ────────────────────────────────────────────────────────────── */
 @media(max-width:960px){
   nav{padding:0 20px}
@@ -611,7 +685,7 @@ textarea.ti-input::placeholder{color:var(--s30)}
     <div class="nav-pill">Genesis</div>
   </div>
   <div class="nav-right">
-    <button class="nav-btn" onclick="App.goTo('text-input')">Type a problem</button>
+    <button class="nav-btn" onclick="App.goTo('input')">Type a problem</button>
     <button class="nav-cta" onclick="App.startDemo()">Run Demo</button>
   </div>
 </nav>
@@ -631,7 +705,7 @@ textarea.ti-input::placeholder{color:var(--s30)}
   </p>
   <div class="hero-actions">
     <button class="btn-primary" onclick="App.startDemo()">Run Demo — free</button>
-    <button class="btn-ghost" onclick="App.goTo('text-input')">Describe your problem</button>
+    <button class="btn-ghost" onclick="App.goTo('input')">Describe your problem</button>
   </div>
 </section>
 
@@ -906,21 +980,122 @@ textarea.ti-input::placeholder{color:var(--s30)}
 </div><!-- /screen-landing -->
 
 
-<!-- ═══════════════════════════════════════════════════════ TEXT INPUT ═══ -->
-<div id="screen-text-input" class="screen">
+<!-- ═══════════════════════════════════════════════════════ INPUT SCREEN ═══ -->
+<div id="screen-input" class="screen">
   <nav>
     <div class="nav-logo"><div class="nav-wordmark">SPOKE</div><div class="nav-pill">Genesis</div></div>
     <button class="nav-btn" onclick="App.goTo('landing')">← Back</button>
   </nav>
-  <div class="ti-wrap">
-    <div class="ti-title">Describe your problem</div>
-    <div class="ti-sub">Genesis will build a primary agent plus up to 5 adjacent automation agents, run a full business simulation, and calculate your ROI — no code required.</div>
-    <textarea class="ti-input" id="problemText" placeholder="e.g. Every day I get 10–15 order emails in Gmail. I manually open each one, read the customer name, product, quantity, and price, then type it into Google Sheets. It takes about 2 hours." rows="6"></textarea>
-    <div class="ti-actions">
-      <button class="btn-primary" onclick="App.startFromText()">Launch Genesis</button>
-      <button class="btn-ghost" onclick="App.fillExample()">Use example</button>
+  <div class="inp-wrap">
+    <div class="inp-title">Speak your problem</div>
+    <div class="inp-sub">Record your voice, upload a video/audio file, or type — SPOKE builds an entire automation ecosystem from your description.</div>
+
+    <!-- Mode tabs -->
+    <div class="inp-tabs">
+      <button class="inp-tab active" id="tab-record" onclick="App.switchInpTab('record',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        Record
+      </button>
+      <button class="inp-tab" id="tab-upload" onclick="App.switchInpTab('upload',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload
+      </button>
+      <button class="inp-tab" id="tab-type" onclick="App.switchInpTab('type',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        Type
+      </button>
     </div>
-    <div class="ti-hint">Demo mode — no API keys required</div>
+
+    <!-- ─ RECORD PANEL ─ -->
+    <div class="inp-panel active" id="panel-record">
+      <div class="rec-wrap">
+        <!-- big mic button -->
+        <div class="rec-ring">
+          <svg class="rec-ring-svg" id="recRingSvg" viewBox="0 0 120 120" fill="none">
+            <circle cx="60" cy="60" r="54" stroke="rgba(255,255,255,.06)" stroke-width="4"/>
+            <circle cx="60" cy="60" r="54" stroke="#ef4444" stroke-width="4" stroke-linecap="round"
+              stroke-dasharray="339.3" stroke-dashoffset="339.3" id="recRingProgress" style="transition:stroke-dashoffset .8s linear"/>
+          </svg>
+          <button class="rec-btn" id="recBtn" onclick="App.toggleRecording()" title="Click to record">
+            <svg id="recMicIcon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+            <svg id="recStopIcon" width="26" height="26" viewBox="0 0 24 24" fill="white" style="display:none">
+              <rect x="4" y="4" width="16" height="16" rx="3"/>
+            </svg>
+            <svg id="recCheckIcon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" style="display:none">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- waveform — appears only while recording -->
+        <div class="rec-canvas-wrap" id="recCanvasWrap">
+          <canvas id="recCanvas"></canvas>
+        </div>
+
+        <div class="rec-timer" id="recTimer">Tap to record</div>
+        <div class="rec-hint" id="recHint">Up to 60 seconds — describe your workflow</div>
+
+        <!-- ready state -->
+        <div class="rec-ready" id="recReady">
+          <div class="rec-ready-label">Recording captured</div>
+          <div class="rec-ready-txt" id="recReadyTxt"></div>
+        </div>
+
+        <!-- action buttons -->
+        <div class="rec-actions" id="recActions">
+          <button class="btn-primary inp-fullbtn" onclick="App.submitRecording()">Launch Genesis with this recording</button>
+          <button class="btn-ghost inp-fullbtn" style="font-size:13px" onclick="App.resetRecording()">Record again</button>
+        </div>
+
+        <button class="btn-ghost" style="font-size:12px;padding:8px 16px;margin-top:4px;color:var(--s30)" onclick="App.startDemo()">Try demo instead</button>
+      </div>
+    </div>
+
+    <!-- ─ UPLOAD PANEL ─ -->
+    <div class="inp-panel" id="panel-upload">
+      <div class="upl-zone" id="uplZone">
+        <input type="file" id="uplInput" accept=".mp4,.mov,.webm,.avi,.mp3,.wav,.m4a,video/*,audio/*" onchange="App.onFileSelected(this)">
+        <div class="upl-icon">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="upl-main">Drop your video or audio here</div>
+        <div class="upl-sub">or click to browse files</div>
+        <div class="upl-fmt">.mp4 · .mov · .mp3 · .wav · .m4a · .webm</div>
+      </div>
+
+      <div class="upl-file-card" id="uplFileCard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div style="flex:1;min-width:0">
+          <div class="upl-fname" id="uplFileName">—</div>
+          <div class="upl-fsize" id="uplFileSize">—</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+
+      <div class="upl-actions" id="uplActions">
+        <button class="btn-primary inp-fullbtn" onclick="App.submitFile()">Launch Genesis with this file</button>
+        <button class="btn-ghost inp-fullbtn" style="font-size:13px" onclick="App.startDemo()">Try demo instead</button>
+      </div>
+    </div>
+
+    <!-- ─ TYPE PANEL ─ -->
+    <div class="inp-panel" id="panel-type">
+      <textarea class="ti-input" id="problemText" placeholder="e.g. Every day I get 10–15 order emails in Gmail. I manually open each one, copy the customer name, product, quantity, and price into Google Sheets. It takes about 2 hours and I sometimes make mistakes." rows="7"></textarea>
+      <div class="ti-actions" style="margin-top:12px">
+        <button class="btn-primary" onclick="App.startFromText()">Launch Genesis</button>
+        <button class="btn-ghost" onclick="App.fillExample()">Use example</button>
+      </div>
+      <div class="ti-hint" style="margin-top:10px">Demo mode — no API keys required</div>
+    </div>
   </div>
 </div>
 
@@ -931,13 +1106,19 @@ textarea.ti-input::placeholder{color:var(--s30)}
     <div class="run-head">
       <div class="run-overline">Genesis activating</div>
       <div class="run-title">Building your automation stack</div>
-      <div class="run-sub">10 intelligence systems — ~8 seconds</div>
+      <div class="run-sub">10 intelligence systems — ~90 seconds</div>
     </div>
     <div class="run-stages" id="runStages"></div>
     <div class="run-progress-wrap">
       <div class="run-track"><div class="run-fill" id="runFill"></div></div>
     </div>
     <div class="run-pct" id="runPct">0%</div>
+    <div id="runFinalizing" style="display:none">
+      <div class="run-finalizing" style="display:flex">
+        <div class="fin-dot"></div>
+        <div class="fin-txt">AI is compiling your full analysis — almost there…</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1088,7 +1269,7 @@ const App={
     });
   },
 
-  _runStages(demo,text){
+  _runStages(demo,text,formData,inputType){
     const container=document.getElementById('runStages');
     const fill=document.getElementById('runFill');
     const pctEl=document.getElementById('runPct');
@@ -1103,14 +1284,17 @@ const App={
       </div>`).join('');
 
     let apiDone=false,apiResult=null;
-    this._callApi(demo,text).then(r=>{apiResult=r;apiDone=true;}).catch(()=>{apiResult=MOCK;apiDone=true;});
+    this._callApi(demo,text,formData,inputType).then(r=>{apiResult=r;apiDone=true;}).catch(()=>{apiResult=MOCK;apiDone=true;});
 
     let si=0;
     const total=STAGES.length;
     const advance=()=>{
       if(si>=total){
+        fill.style.width='99%';pctEl.textContent='99%';
+        const fin=document.getElementById('runFinalizing');
+        if(fin)fin.style.display='block';
         const poll=()=>{
-          if(apiDone){this.result=apiResult||MOCK;this._showResults();}
+          if(apiDone){if(fin)fin.style.display='none';this.result=apiResult||MOCK;this._showResults();}
           else setTimeout(poll,300);
         };
         poll();return;
@@ -1143,10 +1327,171 @@ const App={
     setTimeout(advance,300);
   },
 
-  async _callApi(demo,text){
-    const base=(['localhost','127.0.0.1'].includes(location.hostname))?`http://${location.hostname}:8000`:'';
-    if(demo){const r=await fetch(`${base}/api/v1/genesis/demo`,{method:'POST'});if(!r.ok)throw new Error(r.statusText);return r.json();}
-    else{const r=await fetch(`${base}/api/v1/genesis/run/text`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,demo_mode:false})});if(!r.ok)throw new Error(r.statusText);return r.json();}
+  async _callApi(demo,text,formData,inputType){
+    const base='';
+    if(demo){
+      const r=await fetch(`${base}/api/v1/genesis/demo`,{method:'POST'});
+      if(!r.ok)throw new Error(r.statusText);
+      return r.json();
+    }
+    if(inputType==='video'&&formData){
+      const r=await fetch(`${base}/api/v1/genesis/run/video`,{method:'POST',body:formData});
+      if(!r.ok)throw new Error(r.statusText);
+      return r.json();
+    }
+    const r=await fetch(`${base}/api/v1/genesis/run/text`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,demo_mode:false})});
+    if(!r.ok)throw new Error(r.statusText);
+    return r.json();
+  },
+
+  // ── INPUT MODE SWITCHING ─────────────────────────────────────────────────────
+  switchInpTab(name,btn){
+    document.querySelectorAll('.inp-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.inp-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+name).classList.add('active');
+  },
+
+  // ── RECORDING ────────────────────────────────────────────────────────────────
+  _recorder:null,_recChunks:[],_recBlob:null,_recTimerInterval:null,
+  _recSeconds:0,_recStream:null,_analyser:null,_animFrame:null,_recAudioCtx:null,
+
+  async toggleRecording(){
+    if(this._recorder&&this._recorder.state==='recording'){this._stopRecording();}
+    else{await this._startRecording();}
+  },
+
+  async _startRecording(){
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+      this._recStream=stream;this._recChunks=[];this._recBlob=null;
+      const mimeType=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+      this._recorder=new MediaRecorder(stream,{mimeType});
+      this._recorder.ondataavailable=e=>{if(e.data.size>0)this._recChunks.push(e.data);};
+      this._recorder.onstop=()=>this._onRecordingDone();
+      this._recorder.start(100);
+      // UI
+      const btn=document.getElementById('recBtn');
+      btn.classList.add('recording');
+      document.getElementById('recMicIcon').style.display='none';
+      document.getElementById('recStopIcon').style.display='block';
+      document.getElementById('recHint').textContent='Click to stop · up to 60s';
+      // Timer
+      this._recSeconds=0;
+      this._recTimerInterval=setInterval(()=>{
+        this._recSeconds++;
+        const m=String(Math.floor(this._recSeconds/60)).padStart(2,'0');
+        const s=String(this._recSeconds%60).padStart(2,'0');
+        document.getElementById('recTimer').textContent=m+':'+s;
+        // ring progress
+        const prog=document.getElementById('recRingProgress');
+        if(prog){const pct=this._recSeconds/60;prog.style.strokeDashoffset=339.3*(1-pct);}
+        if(this._recSeconds>=60)this._stopRecording();
+      },1000);
+      // Waveform
+      this._recAudioCtx=new AudioContext();
+      const src=this._recAudioCtx.createMediaStreamSource(stream);
+      this._analyser=this._recAudioCtx.createAnalyser();
+      this._analyser.fftSize=128;
+      src.connect(this._analyser);
+      document.getElementById('recCanvasWrap').classList.add('visible');
+      this._drawWaveform();
+    }catch(e){
+      alert('Microphone access denied. Please allow microphone access in your browser and try again.');
+    }
+  },
+
+  _stopRecording(){
+    if(this._recorder&&this._recorder.state==='recording'){
+      this._recorder.stop();
+      if(this._recStream)this._recStream.getTracks().forEach(t=>t.stop());
+    }
+    clearInterval(this._recTimerInterval);
+    cancelAnimationFrame(this._animFrame);
+    if(this._recAudioCtx){this._recAudioCtx.close();this._recAudioCtx=null;}
+    document.getElementById('recCanvasWrap').classList.remove('visible');
+    const btn=document.getElementById('recBtn');
+    btn.classList.remove('recording');
+    btn.classList.add('done');
+    document.getElementById('recMicIcon').style.display='none';
+    document.getElementById('recStopIcon').style.display='none';
+    document.getElementById('recCheckIcon').style.display='block';
+    document.getElementById('recHint').textContent='Recording saved';
+  },
+
+  _onRecordingDone(){
+    this._recBlob=new Blob(this._recChunks,{type:'audio/webm'});
+    const dur=this._recSeconds;
+    const mb=(this._recBlob.size/1024/1024).toFixed(1);
+    document.getElementById('recReadyTxt').textContent=
+      `${dur}s recording (${mb} MB) — SPOKE will transcribe this and build your full automation ecosystem.`;
+    document.getElementById('recReady').classList.add('show');
+    document.getElementById('recActions').classList.add('show');
+  },
+
+  _drawWaveform(){
+    if(!this._analyser)return;
+    const canvas=document.getElementById('recCanvas');
+    const ctx=canvas.getContext('2d');
+    const buf=new Uint8Array(this._analyser.frequencyBinCount);
+    const draw=()=>{
+      this._animFrame=requestAnimationFrame(draw);
+      this._analyser.getByteFrequencyData(buf);
+      const W=canvas.width=canvas.offsetWidth;
+      const H=canvas.height=canvas.offsetHeight;
+      ctx.clearRect(0,0,W,H);
+      const barW=(W/buf.length)*2.2;let x=0;
+      for(let i=0;i<buf.length;i++){
+        const h=(buf[i]/255)*H;
+        const alpha=0.25+(buf[i]/255)*0.75;
+        ctx.fillStyle=`rgba(99,102,241,${alpha})`;
+        ctx.beginPath();ctx.roundRect(x,H-h,Math.max(2,barW-1),h,2);ctx.fill();
+        x+=barW;
+      }
+    };draw();
+  },
+
+  resetRecording(){
+    this._recBlob=null;this._recChunks=[];this._recSeconds=0;
+    const btn=document.getElementById('recBtn');
+    btn.classList.remove('recording','done');
+    document.getElementById('recMicIcon').style.display='block';
+    document.getElementById('recStopIcon').style.display='none';
+    document.getElementById('recCheckIcon').style.display='none';
+    document.getElementById('recTimer').textContent='Tap to record';
+    document.getElementById('recHint').textContent='Up to 60 seconds — describe your workflow';
+    document.getElementById('recReady').classList.remove('show');
+    document.getElementById('recActions').classList.remove('show');
+    const prog=document.getElementById('recRingProgress');
+    if(prog)prog.style.strokeDashoffset='339.3';
+  },
+
+  submitRecording(){
+    if(!this._recBlob)return;
+    const fd=new FormData();
+    fd.append('file',this._recBlob,'recording.webm');
+    fd.append('demo_mode','false');
+    this.goTo('running');this._runStages(false,'',fd,'video');
+  },
+
+  // ── FILE UPLOAD ──────────────────────────────────────────────────────────────
+  _uplFile:null,
+
+  onFileSelected(input){
+    const file=input.files[0];if(!file)return;
+    this._uplFile=file;
+    document.getElementById('uplFileName').textContent=file.name;
+    document.getElementById('uplFileSize').textContent=(file.size/1024/1024).toFixed(1)+' MB';
+    document.getElementById('uplFileCard').classList.add('show');
+    document.getElementById('uplActions').classList.add('show');
+  },
+
+  submitFile(){
+    if(!this._uplFile)return;
+    const fd=new FormData();
+    fd.append('file',this._uplFile);
+    fd.append('demo_mode','false');
+    this.goTo('running');this._runStages(false,'',fd,'video');
   },
 
   _showResults(){
@@ -1357,7 +1702,27 @@ const App={
   esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')},
 };
 
-document.addEventListener('DOMContentLoaded',()=>App._animateLanding());
+document.addEventListener('DOMContentLoaded',()=>{
+  App._animateLanding();
+
+  // ── Drag-and-drop on upload zone ─────────────────────────────────────────────
+  const zone=document.getElementById('uplZone');
+  if(zone){
+    ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{
+      e.preventDefault();e.stopPropagation();zone.classList.add('drag');
+    }));
+    ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{
+      e.preventDefault();e.stopPropagation();zone.classList.remove('drag');
+    }));
+    zone.addEventListener('drop',e=>{
+      const files=e.dataTransfer.files;
+      if(files&&files[0]){
+        document.getElementById('uplInput').files=files;
+        App.onFileSelected(document.getElementById('uplInput'));
+      }
+    });
+  }
+});
 </script>
 </body>
 </html>

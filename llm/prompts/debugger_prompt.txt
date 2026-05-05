@@ -37,7 +37,25 @@ ATTEMPT-BASED ESCALATION:
   - Attempt 4: Simplify the failing section while keeping functionality
   - Attempt 5: Rewrite the entire failing section from scratch with maximum simplicity
 
+AVAILABLE PACKAGES — ONLY THESE ARE INSTALLED (critical):
+  stdlib + these third-party packages:
+  - pydantic (v2), loguru, tenacity, rich, python-dotenv, httpx, aiosqlite, aiofiles, numpy, fastapi, uvicorn
+
+  FORBIDDEN — NOT installed, will always fail:
+  - googleapiclient / google-auth / google.oauth2 / google.auth → NOT installed
+    → Fix: use httpx to call Gmail/Sheets REST API directly (Bearer token in header)
+  - requests → NOT available → Fix: use httpx instead
+  - pandas → NOT available → Fix: use stdlib csv module or plain list/dict
+  - openai / anthropic → NOT available → Fix: use httpx to call APIs directly
+  - selenium / playwright → NOT installed → Fix: use httpx for web requests
+  - boto3 / paramiko → NOT installed → Fix: mock in demo mode
+
 COMMON FIXES:
+  - `ModuleNotFoundError: googleapiclient` / `google.oauth2` / `google.auth` →
+    these are NEVER installed. Replace Google API client calls with httpx REST calls,
+    or use mock data in demo(). Never try to pip install or use an alternative google lib.
+  - `ModuleNotFoundError: requests` → replace with httpx (sync: httpx.get/post, async: httpx.AsyncClient)
+  - `ModuleNotFoundError: pandas` → replace with stdlib csv or plain list/dict operations
   - `import whisper` fails → use a simple audio file mock in demo mode
   - `import e2b` fails → use subprocess sandbox
   - API call fails in demo → replace with hardcoded realistic mock data

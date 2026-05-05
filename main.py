@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from loguru import logger
 
 from core.config import settings
 from api.routes import router as api_router
 from api.genesis_routes import router as genesis_router
 from api.websocket import websocket_pipeline_endpoint
+
+_WEB_DIR = Path(__file__).parent / "frontend" / "web"
 
 
 def create_app() -> FastAPI:
@@ -32,6 +36,10 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router, prefix="/api/v1")
     app.include_router(genesis_router, prefix="/api/v1")
+
+    @app.get("/", response_class=FileResponse, include_in_schema=False)
+    async def serve_frontend():
+        return FileResponse(_WEB_DIR / "index.html")
 
     @app.websocket("/ws/{session_id}")
     async def ws_endpoint(websocket: WebSocket, session_id: str, mode: str = "demo"):

@@ -100,12 +100,12 @@ class LLMClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
-        if json_mode:
-            payload["response_format"] = {"type": "json_object"}
+        # Note: json_mode not sent — not all HF models support structured-outputs.
+        # _parse_json handles extraction from plain text responses.
 
         t0 = time.perf_counter()
         try:
-            resp = await self._hf_client.post(f"/models/{model}/v1/chat/completions", json=payload)
+            resp = await self._hf_client.post("/v1/chat/completions", json=payload)
             resp.raise_for_status()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 429:

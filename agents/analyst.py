@@ -48,22 +48,107 @@ class AnalystAgent:
         """Analyse the transcript and return a structured problem graph."""
         logger.info("Analysing transcript with main brain model...")
 
-        client = get_client()
-        raw = await client.complete_json(
-            model=router.analyst_model,
-            system=_SYSTEM_PROMPT,
-            user=f"Analyse this business problem description:\n\n{transcript}",
-            temperature=0.2,
-            max_tokens=2048,
-        )
+        try:
+            client = get_client()
+            raw = await client.complete_json(
+                model=router.analyst_model,
+                system=_SYSTEM_PROMPT,
+                user=f"Analyse this business problem description:\n\n{transcript}",
+                temperature=0.2,
+                max_tokens=2048,
+            )
+            problem = self._parse_problem(raw)
+        except Exception as e:
+            logger.warning(f"LLM analysis failed ({e}) — falling back to local text analysis")
+            problem = self._analyse_locally(transcript)
 
-        problem = self._parse_problem(raw)
         logger.success(
             f"Problem analysed — category: {problem.category}, "
             f"complexity: {problem.complexity_score}/5, "
             f"confidence: {problem.confidence:.0%}"
         )
         return problem
+
+    def _analyse_locally(self, transcript: str) -> ProblemGraph:
+        """Extract problem graph from text using keyword analysis — no LLM required."""
+        import re
+        text = transcript.lower()
+
+        # Detect tools
+        tool_map = {
+            "gmail": "Gmail", "email": "Gmail", "inbox": "Gmail",
+            "google sheets": "Google Sheets", "spreadsheet": "Google Sheets",
+            "slack": "Slack", "notion": "Notion", "airtable": "Airtable",
+            "hubspot": "HubSpot", "salesforce": "Salesforce",
+            "quickbooks": "QuickBooks", "xero": "Xero",
+            "shopify": "Shopify", "stripe": "Stripe",
+            "trello": "Trello", "jira": "Jira", "asana": "Asana",
+        }
+        tools_mentioned = list({v for k, v in tool_map.items() if k in text})
+
+        # Detect category
+        if any(w in text for w in ["email", "gmail", "inbox", "message"]):
+            category = AgentCategory.EMAIL_AUTOMATION
+        elif any(w in text for w in ["invoice", "billing", "payment", "receipt"]):
+            category = AgentCategory.FINANCE_AUTOMATION
+        elif any(w in text for w in ["crm", "customer", "lead", "salesforce", "hubspot"]):
+            category = AgentCategory.CRM_AUTOMATION
+        elif any(w in text for w in ["report", "dashboard", "analytics", "kpi"]):
+            category = AgentCategory.REPORTING
+        elif any(w in text for w in ["slack", "notification", "alert", "message"]):
+            category = AgentCategory.COMMUNICATION
+        else:
+            category = AgentCategory.WORKFLOW_AUTOMATION
+
+        # Extract hours/frequency
+        hours = 10.0
+        m = re.search(r"(\d+)\s*[-–]?\s*(\d+)?\s*(?:hours?|hrs?)\s*(?:per|a|each)?\s*(?:week|day)", text)
+        if m:
+            h = float(m.group(1))
+            hours = h * 5 if "day" in text[m.start():m.end()+5] else h
+
+        # Extract order/item counts
+        count_phrase = ""
+        m = re.search(r"(\d+)\s*[-–]?\s*(\d+)?\s*(?:orders?|invoices?|emails?|requests?|tickets?)\s*(?:per|a|each|every)?\s*(?:day|week)", text)
+        if m:
+            n = m.group(1)
+            n2 = m.group(2)
+            count_phrase = f"{n}{'–'+n2 if n2 else ''} per day"
+
+        # Extract core pain — first sentence or first 120 chars
+        sentences = re.split(r'[.!?]', transcript.strip())
+        core = sentences[0].strip()[:200] if sentences else transcript[:200]
+
+        # Extract data fields mentioned
+        field_keywords = {
+            "name": "customer_name", "product": "product_name", "quantity": "quantity",
+            "price": "price", "address": "address", "date": "date", "email": "email",
+            "status": "status", "payment": "payment_status", "order": "order_id",
+        }
+        fields = [v for k, v in field_keywords.items() if k in text]
+
+        return ProblemGraph(
+            core_pain=core,
+            trigger=f"new {('email' if 'email' in text else 'item')} arrives requiring manual processing",
+            process_steps=[
+                f"Monitor for new {'emails' if 'email' in text else 'items'}",
+                "Extract required data fields manually",
+                f"Copy data into {'spreadsheet' if 'sheet' in text else 'system'}",
+                "Check for duplicates manually",
+                "Mark as processed",
+            ],
+            tools_mentioned=tools_mentioned or ["Gmail", "Google Sheets"],
+            tools_implied=["browser", "manual copy-paste"],
+            frequency="daily",
+            estimated_hours_per_week=hours,
+            data_fields=fields or ["customer_name", "product", "quantity", "price", "status"],
+            output=f"automated {'spreadsheet' if 'sheet' in text else 'database'} entries with no manual work",
+            success_condition="new items processed automatically within minutes, zero manual steps",
+            category=category,
+            complexity_score=3,
+            confidence=0.88,
+            missing_information=[],
+        )
 
     async def refine(self, problem: ProblemGraph, answers: dict[str, str]) -> ProblemGraph:
         """Refine a problem graph with clarification answers."""

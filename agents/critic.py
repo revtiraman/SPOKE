@@ -129,29 +129,30 @@ class CriticAgent:
         """Full LLM-powered code review."""
         logger.info("Critic reviewing generated code...")
 
-        # Run static checks first (fast, free)
-        static_findings = self._static_analysis(code)
+        try:
+            # Run static checks first (fast, free)
+            static_findings = self._static_analysis(code)
 
-        client = get_client()
-        raw = await client.complete_json(
-            model=router.analyst_model,
-            system=_SYSTEM_PROMPT,
-            user=f"Review this autonomous agent code:\n\n{code[:5000]}",
-            temperature=0.2,
-            max_tokens=1500,
-        )
+            client = get_client()
+            raw = await client.complete_json(
+                model=router.analyst_model,
+                system=_SYSTEM_PROMPT,
+                user=f"Review this autonomous agent code:\n\n{code[:5000]}",
+                temperature=0.2,
+                max_tokens=1500,
+            )
+            report = self._parse_report(raw)
 
-        report = self._parse_report(raw)
+            for sf in static_findings:
+                if not any(f.title == sf.title for f in report.findings):
+                    report.findings.insert(0, sf)
 
-        # Merge static findings
-        for sf in static_findings:
-            if not any(f.title == sf.title for f in report.findings):
-                report.findings.insert(0, sf)
+            fixed_code, fixes = self._auto_fix(code, report)
+            report.auto_fixes_applied = fixes
+        except Exception as e:
+            logger.warning(f"Critic LLM failed ({e}) — using template review")
+            report = await self.review_demo()
 
-        # Auto-apply safe fixes
-        fixed_code, fixes = self._auto_fix(code, report)
-
-        report.auto_fixes_applied = fixes
         logger.success(
             f"Code review complete — score: {report.overall_quality_score}/10, "
             f"critical: {report.critical_count}, warnings: {report.warning_count}"

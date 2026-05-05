@@ -1,12 +1,15 @@
 #!/bin/bash
 # SPOKE Genesis v2.0 — One-command startup
 # Usage:
-#   ./run.sh          → API server (port 8000)
+#   ./run.sh web      → Production Web UI at http://localhost:8000  ← RECOMMENDED
+#   ./run.sh genesis  → SPOKE Genesis Streamlit UI (port 8502)
+#   ./run.sh api      → API only (port 8000, no browser UI)
 #   ./run.sh demo     → CLI demo in terminal
+#   ./run.sh          → defaults to web
 
 set -e
 
-MODE=${1:-api}
+MODE=${1:-web}
 
 echo ""
 echo "  ⚡  SPOKE Genesis — Autonomous Business Automation Intelligence"
@@ -32,17 +35,33 @@ fi
 
 mkdir -p logs storage/generated
 
-if [ "$MODE" = "demo" ]; then
+if [ "$MODE" = "web" ]; then
+    echo ""
+    echo "  🚀 SPOKE Genesis — Production Web UI"
+    echo "  → Open http://localhost:8000"
+    echo ""
+    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+elif [ "$MODE" = "genesis" ]; then
+    echo ""
+    echo "  🚀 Launching SPOKE Genesis Streamlit UI..."
+    echo "  → Open http://localhost:8502"
+    echo ""
+    streamlit run frontend/genesis_app.py --server.port 8502 --server.headless false
+
+elif [ "$MODE" = "demo" ]; then
     echo ""
     echo "  Running CLI demo..."
     echo ""
     python demo_cli.py
+
 else
+    # api mode
     echo ""
     echo "  Starting SPOKE Genesis API..."
-    echo "  → API:     http://localhost:8000"
-    echo "  → Docs:    http://localhost:8000/docs"
-    echo "  → Genesis: POST /api/v1/genesis/demo"
+    echo "  → API:  http://localhost:8000"
+    echo "  → Docs: http://localhost:8000/docs"
+    echo "  → Web UI: http://localhost:8000/"
     echo ""
     uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 fi

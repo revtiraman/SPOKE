@@ -91,22 +91,26 @@ class InsightsEngine:
         """Generate proactive insights from a problem graph."""
         logger.info("InsightsEngine generating proactive observations...")
 
-        client = get_client()
-        raw = await client.complete_json(
-            model=router.clarifier_model,
-            system=_SYSTEM_PROMPT,
-            user=(
-                f"Problem: {problem.core_pain}\n"
-                f"Tools: {', '.join(problem.tools_mentioned + problem.tools_implied)}\n"
-                f"Steps: {'; '.join(problem.process_steps[:5])}\n"
-                f"Data fields: {', '.join(problem.data_fields)}\n"
-                f"Frequency: {problem.frequency}"
-            ),
-            temperature=0.5,
-            max_tokens=1000,
-        )
+        try:
+            client = get_client()
+            raw = await client.complete_json(
+                model=router.clarifier_model,
+                system=_SYSTEM_PROMPT,
+                user=(
+                    f"Problem: {problem.core_pain}\n"
+                    f"Tools: {', '.join(problem.tools_mentioned + problem.tools_implied)}\n"
+                    f"Steps: {'; '.join(problem.process_steps[:5])}\n"
+                    f"Data fields: {', '.join(problem.data_fields)}\n"
+                    f"Frequency: {problem.frequency}"
+                ),
+                temperature=0.5,
+                max_tokens=1000,
+            )
+            insights = self._parse(raw)
+        except Exception as e:
+            logger.warning(f"Insights LLM failed ({e}) — using template insights")
+            insights = InsightsResult(insights=[Insight(**i) for i in _DEMO_INSIGHTS])
 
-        insights = self._parse(raw)
         logger.success(f"Generated {len(insights.insights)} proactive insights")
         return insights
 

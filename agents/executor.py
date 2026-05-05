@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import os
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -69,7 +70,7 @@ class ExecutorAgent:
             env["PYTHONUNBUFFERED"] = "1"
 
             proc = await asyncio.create_subprocess_exec(
-                "python3", tmp_path, "--mode", "demo",
+                sys.executable, tmp_path, "--mode", "demo",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env=env,

@@ -86,21 +86,56 @@ class ArchitectAgent:
         """Design a complete solution blueprint."""
         logger.info(f"Designing architecture for: {problem.core_pain[:60]}...")
 
-        client = get_client()
-        raw = await client.complete_json(
-            model=router.architect_model,
-            system=_SYSTEM_PROMPT,
-            user=(
-                f"Design an autonomous agent for this problem:\n\n"
-                f"{problem.model_dump_json(indent=2)}"
-            ),
-            temperature=0.2,
-            max_tokens=3000,
-        )
+        try:
+            client = get_client()
+            raw = await client.complete_json(
+                model=router.architect_model,
+                system=_SYSTEM_PROMPT,
+                user=(
+                    f"Design an autonomous agent for this problem:\n\n"
+                    f"{problem.model_dump_json(indent=2)}"
+                ),
+                temperature=0.2,
+                max_tokens=3000,
+            )
+            blueprint = self._parse_blueprint(raw)
+        except Exception as e:
+            logger.warning(f"LLM blueprint failed ({e}) — using adaptive template")
+            blueprint = self._build_adaptive_blueprint(problem)
 
-        blueprint = self._parse_blueprint(raw)
         logger.success(f"Blueprint designed: {blueprint.agent_name} ({blueprint.architecture_type})")
         return blueprint
+
+    def _build_adaptive_blueprint(self, problem: ProblemGraph) -> Blueprint:
+        """Build a blueprint from the problem graph without LLM."""
+        import re
+        tools = [ToolRequirement(name=t, purpose=f"Integration with {t}", auth="OAuth2 / API key", endpoints=[]) for t in (problem.tools_mentioned or ["Gmail", "Google Sheets"])]
+        # Pick meaningful name from category + core tools
+        category_names = {
+            "email_automation": "EmailSync", "finance_automation": "InvoiceBot",
+            "crm_automation": "CRMSync", "reporting": "ReportBot",
+            "communication": "NotifyBot", "workflow_automation": "WorkflowBot",
+        }
+        cat = problem.category.value if hasattr(problem.category, "value") else "workflow_automation"
+        name = category_names.get(cat, "AutoAgent")
+        return Blueprint(
+            agent_name=name,
+            agent_description=problem.core_pain[:200],
+            architecture_type=ArchitectureType.EVENT_DRIVEN,
+            tools_required=tools,
+            trigger_mechanism=TriggerMechanism(type="polling", interval_seconds=60, filter=""),
+            processing_steps=[
+                f"1. Monitor for new {('emails' if 'email' in problem.core_pain.lower() else 'items')}",
+                "2. Extract required data fields",
+                "3. Validate and deduplicate",
+                "4. Write to output system",
+                "5. Send summary report",
+            ],
+            error_handling=_DEMO_BLUEPRINT.error_handling,
+            logging=_DEMO_BLUEPRINT.logging,
+            mock_mode=_DEMO_BLUEPRINT.mock_mode,
+            implementation_base="custom",
+        )
 
     def _parse_blueprint(self, raw: dict) -> Blueprint:
         """Parse raw LLM output into a Blueprint with safe fallbacks."""

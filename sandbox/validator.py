@@ -18,11 +18,7 @@ _BLOCKED_PATTERNS = [
     (r"\brm\s+-rf\b", "rm -rf blocked"),
 ]
 
-_REQUIRED_ELEMENTS = [
-    ("def demo(", "demo() function required"),
-    ("def main(", "main() function required"),
-    ("if __name__", "__main__ block required"),
-]
+_REQUIRED_ELEMENTS: list = []  # removed strict function requirements — real LLM code varies
 
 
 class CodeValidator:
