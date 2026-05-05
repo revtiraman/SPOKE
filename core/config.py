@@ -60,14 +60,16 @@ class Settings(BaseSettings):
     def hf_base_url(self) -> str:
         t = self.hf_api_token
         if t.startswith("gsk_"):
-            return "https://api.groq.com/openai"          # Groq (free)
-        if t.startswith("sk-or-"):
-            return "https://openrouter.ai/api"             # OpenRouter
+            return "https://api.groq.com/openai"
         if t.startswith("csk-"):
-            return "https://api.cerebras.ai"               # Cerebras
+            return "https://api.cerebras.ai"
+        if t.startswith("AIza"):
+            return "https://generativelanguage.googleapis.com/v1beta/openai"
         if t.startswith("together_"):
-            return "https://api.together.xyz"              # Together.ai
-        return "https://router.huggingface.co"             # HuggingFace
+            return "https://api.together.xyz"
+        if t.startswith("sk-or-"):
+            return "https://openrouter.ai/api"
+        return "https://router.huggingface.co"
 
     @property
     def has_hf(self) -> bool:

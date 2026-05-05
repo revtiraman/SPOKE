@@ -145,27 +145,73 @@ class LLMClient:
         raw = await self.complete(model, system, user, json_mode=True, **kwargs)
         return self._parse_json(raw)
 
-    def _parse_json(self, text: str) -> dict:
+    def _parse_json(self, text: str) -> dict | list:
         text = text.strip()
-        # strip markdown fences
-        if text.startswith("```"):
-            lines = text.split("\n")
-            text = "\n".join(lines[1:-1] if lines[-1].startswith("```") else lines[1:])
-        # find first { or [
-        for start_char, end_char in [('{', '}'), ('[', ']')]:
-            idx = text.find(start_char)
-            if idx != -1:
-                ridx = text.rfind(end_char)
-                if ridx != -1:
-                    try:
-                        return json.loads(text[idx:ridx+1])
-                    except json.JSONDecodeError:
-                        pass
+
+        # Strip markdown fences
+        if "```" in text:
+            import re
+            text = re.sub(r"```(?:json)?\s*", "", text).strip()
+
+        # Try direct parse first
         try:
             return json.loads(text)
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parse failed: {e}\nRaw: {text[:200]}")
-            raise ValueError(f"LLM returned invalid JSON: {text[:200]}") from e
+        except json.JSONDecodeError:
+            pass
+
+        # Find outermost { } or [ ] — handles truncated/prefixed responses
+        for start_char, end_char in [('[', ']'), ('{', '}')]:
+            idx = text.find(start_char)
+            if idx == -1:
+                continue
+            # Walk backwards from end to find matching close
+            depth = 0
+            end_idx = -1
+            in_str = False
+            escape_next = False
+            for i, ch in enumerate(text[idx:], start=idx):
+                if escape_next:
+                    escape_next = False
+                    continue
+                if ch == '\\' and in_str:
+                    escape_next = True
+                    continue
+                if ch == '"':
+                    in_str = not in_str
+                    continue
+                if in_str:
+                    continue
+                if ch == start_char:
+                    depth += 1
+                elif ch == end_char:
+                    depth -= 1
+                    if depth == 0:
+                        end_idx = i
+                        break
+            if end_idx != -1:
+                candidate = text[idx:end_idx+1]
+                try:
+                    return json.loads(candidate)
+                except json.JSONDecodeError:
+                    # Try to repair common issues: trailing commas
+                    import re
+                    repaired = re.sub(r',\s*([\}\]])', r'\1', candidate)
+                    try:
+                        return json.loads(repaired)
+                    except json.JSONDecodeError:
+                        pass
+
+        # Last resort: if text looks like it's the inside of a JSON object
+        # (starts with a key), wrap it and try again
+        stripped = text.strip().lstrip('\n ')
+        if stripped.startswith('"') and ':' in stripped:
+            try:
+                return json.loads('{' + stripped + ('' if stripped.endswith('}') else '}'))
+            except json.JSONDecodeError:
+                pass
+
+        logger.error(f"JSON parse failed. Raw[:300]: {text[:300]}")
+        raise ValueError(f"LLM returned invalid JSON: {text[:200]}")
 
     async def aclose(self) -> None:
         await self._hf_client.aclose()

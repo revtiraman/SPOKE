@@ -550,20 +550,38 @@ class CoderAgent:
 
         try:
             client = get_client()
+            # Keep blueprint compact to stay within small model context windows
+            bp_summary = (
+                f"Agent: {blueprint.agent_name}\n"
+                f"Description: {blueprint.agent_description}\n"
+                f"Architecture: {blueprint.architecture_type}\n"
+                f"Trigger: every {blueprint.trigger_mechanism.interval_seconds}s\n"
+                f"Tools: {[t.name for t in blueprint.tools_required[:3]]}\n"
+                f"Processing: {blueprint.processing_steps[:4]}\n"
+                f"Error handling: {blueprint.error_handling.network_timeout}"
+            )
             code = await client.complete(
                 model=router.coder_model,
                 system=_SYSTEM_PROMPT,
                 user=(
-                    f"Write a complete Python autonomous agent for this blueprint:\n\n"
-                    f"{blueprint.model_dump_json(indent=2)}\n\n"
-                    f"The agent name is: {blueprint.agent_name}\n"
-                    f"CRITICAL: Include a fully working demo() function with realistic mock data. "
-                    f"Return ONLY pure Python code, starting with the module docstring."
+                    f"Write a complete Python autonomous agent.\n\n"
+                    f"{bp_summary}\n\n"
+                    f"Requirements:\n"
+                    f"- asyncio-based polling loop\n"
+                    f"- SQLite deduplication cache\n"
+                    f"- tenacity retry decorators\n"
+                    f"- Demo mode with realistic mock data\n"
+                    f"- Self-monitoring with consecutive error tracking\n"
+                    f"- loguru logging with rotation\n\n"
+                    f"Return ONLY pure Python code. No markdown. No explanation. "
+                    f"Start with the triple-quote docstring."
                 ),
-                temperature=0.1,
-                max_tokens=6000,
+                temperature=0.15,
+                max_tokens=4096,
             )
             code = self._clean_code(code)
+            if len(code.strip()) < 200:
+                raise ValueError("Generated code too short — likely model error")
         except Exception as e:
             logger.warning(f"LLM code generation failed ({e}) — using adaptive demo code")
             code = self._adapt_demo_code(blueprint)

@@ -143,7 +143,8 @@ For each candidate return:
 }
 
 The winner (selected=true) must have the highest total score.
-Return ONLY a JSON array of 4 architecture objects.
+Return ONLY a raw JSON array. No markdown, no explanation, no text before or after.
+Start your response with [ and end with ].
 """
 
 

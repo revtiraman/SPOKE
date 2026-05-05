@@ -163,7 +163,8 @@ For each, provide:
   "confidence": 0.88
 }
 
-Return ONLY a JSON array of 4 objects.
+Return ONLY a raw JSON array. No markdown, no explanation, no text before or after.
+Start your response with [ and end with ].
 """
 
 

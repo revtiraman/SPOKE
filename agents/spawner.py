@@ -150,7 +150,8 @@ For each agent, return:
 - estimated_annual_value: realistic dollar amount
 - value_description: how that value is calculated
 
-Return ONLY valid JSON array of 4-5 agent objects.
+Return ONLY a raw JSON array. No markdown, no explanation, no text before or after.
+Start your response with [ and end with ].
 """
 
 
