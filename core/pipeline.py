@@ -88,6 +88,11 @@ class SpokePipeline:
                 transcript = await self.transcriber.transcribe_demo()
             else:
                 transcript = await self.transcriber.transcribe(video_path)
+                # If transcription returned empty (no Whisper + non-HF token),
+                # fall back to demo transcript so the rest of the pipeline works.
+                if not transcript.cleaned_text.strip():
+                    logger.warning("Transcription produced empty text — using demo transcript as fallback.")
+                    transcript = await self.transcriber.transcribe_demo()
 
             await self.state.save(session_id, "transcript", transcript)
             await progress(

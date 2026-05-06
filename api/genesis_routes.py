@@ -57,7 +57,7 @@ async def genesis_from_video(
 
     upload_path = settings.storage_dir / f"genesis_upload_{uuid.uuid4().hex[:8]}{ext}"
     async with aiofiles.open(upload_path, "wb") as f:
-        f.write(await file.read())
+        await f.write(await file.read())
 
     result = await _genesis.run(
         video_path=str(upload_path),

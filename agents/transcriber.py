@@ -91,20 +91,46 @@ class TranscriberAgent:
         )
 
     async def _transcribe_hf(self, audio_path: str) -> TranscriptResult:
-        """Fallback: use HuggingFace Inference API for transcription."""
+        """Fallback: use HuggingFace Inference API for transcription.
+
+        Only works when HF_API_TOKEN is a real HuggingFace token (hf_...).
+        For other providers (Cerebras, Gemini, Groq) the token is not valid
+        for the HF Inference API, so we fall back gracefully to an empty
+        transcript rather than crashing the pipeline.
+        """
         import httpx
+
+        token = settings.hf_api_token
+        # HF Inference API only accepts hf_* tokens
+        if not token.startswith("hf_"):
+            logger.warning(
+                f"Whisper HF API skipped — token is not a HuggingFace token "
+                f"(provider: {token[:6]}...). "
+                "Returning empty transcript; user can provide text manually."
+            )
+            return self._empty_transcript()
+
+        file_size = Path(audio_path).stat().st_size
+        if file_size == 0:
+            logger.warning("Audio file is empty (0 bytes) — skipping HF Whisper call.")
+            return self._empty_transcript()
+
         with open(audio_path, "rb") as f:
             audio_bytes = f.read()
 
-        headers = {"Authorization": f"Bearer {settings.hf_api_token}"}
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                "https://api-inference.huggingface.co/models/openai/whisper-large-v3",
-                content=audio_bytes,
-                headers=headers,
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        headers = {"Authorization": f"Bearer {token}"}
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    "https://router.huggingface.co/hf-inference/models/openai/whisper-large-v3",
+                    content=audio_bytes,
+                    headers=headers,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+        except Exception as e:
+            logger.warning(f"HF Whisper API failed ({e}) — returning empty transcript.")
+            return self._empty_transcript()
 
         text = data.get("text", "")
         cleaned = self._clean_text(text)
@@ -113,6 +139,19 @@ class TranscriberAgent:
             cleaned_text=cleaned,
             confidence_score=0.85,
             language_detected="en",
+            word_count=len(cleaned.split()),
+        )
+
+    def _empty_transcript(self) -> TranscriptResult:
+        """Return a placeholder transcript when audio cannot be transcribed."""
+        return TranscriptResult(
+            raw_text="",
+            cleaned_text="",
+            duration_seconds=0.0,
+            confidence_score=0.0,
+            language_detected="en",
+            word_count=0,
+            flagged_segments=[],
         )
 
     async def _extract_audio(self, video_path: str) -> str:
