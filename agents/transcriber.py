@@ -100,13 +100,12 @@ class TranscriberAgent:
         """
         import httpx
 
-        token = settings.hf_api_token
+        token = settings.whisper_token
         # HF Inference API only accepts hf_* tokens
-        if not token.startswith("hf_"):
+        if not token:
             logger.warning(
-                f"Whisper HF API skipped — token is not a HuggingFace token "
-                f"(provider: {token[:6]}...). "
-                "Returning empty transcript; user can provide text manually."
+                "Whisper HF API skipped — no HuggingFace token available. "
+                "Set HF_WHISPER_TOKEN=hf_... in .env to enable video transcription."
             )
             return self._empty_transcript()
 

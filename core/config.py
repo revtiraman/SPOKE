@@ -12,6 +12,9 @@ BASE_DIR = Path(__file__).parent.parent
 class Settings(BaseSettings):
     # LLM API keys
     hf_api_token: str = Field(default="", alias="HF_API_TOKEN")
+    # Optional dedicated HuggingFace token for Whisper transcription.
+    # Set this when HF_API_TOKEN is a non-HF provider (Cerebras, Groq, etc.)
+    hf_whisper_token: str = Field(default="", alias="HF_WHISPER_TOKEN")
     openrouter_api_key: str = Field(default="", alias="OPENROUTER_API_KEY")
     google_api_key: str = Field(default="", alias="GOOGLE_API_KEY")
 
@@ -70,6 +73,16 @@ class Settings(BaseSettings):
         if t.startswith("sk-or-"):
             return "https://openrouter.ai/api"
         return "https://router.huggingface.co"
+
+    @property
+    def whisper_token(self) -> str:
+        """Returns the best available token for HF Whisper API calls.
+        Prefers HF_WHISPER_TOKEN; falls back to HF_API_TOKEN if it's a real hf_ key."""
+        if self.hf_whisper_token.startswith("hf_"):
+            return self.hf_whisper_token
+        if self.hf_api_token.startswith("hf_"):
+            return self.hf_api_token
+        return ""
 
     @property
     def has_hf(self) -> bool:
