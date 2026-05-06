@@ -76,8 +76,10 @@ class LLMClient:
         return await self._hf_complete(model, system, user, temperature, max_tokens, json_mode)
 
     @retry(
+        # Fail fast: 3 attempts, up to ~5s total wait. If the provider is down/rate-limited
+        # past this we fall back to templates rather than stalling the pipeline for minutes.
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=30),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
         retry=retry_if_exception_type(_RETRY_ERRORS),
         before_sleep=before_sleep_log(logger, logging.WARNING),
     )
@@ -108,7 +110,16 @@ class LLMClient:
             resp = await self._hf_client.post("/v1/chat/completions", json=payload)
             resp.raise_for_status()
         except httpx.HTTPStatusError as e:
+            # Normalize rate limits into a retryable error.
             if e.response.status_code == 429:
+                retry_after = e.response.headers.get("retry-after")
+                if retry_after:
+                    try:
+                        wait_s = float(retry_after)
+                        logger.warning(f"Rate limited (429). Respecting Retry-After: {wait_s:.1f}s")
+                        await asyncio.sleep(wait_s)
+                    except Exception:
+                        pass
                 raise httpx.ConnectError("Rate limited") from e
             logger.error(f"HF API error {e.response.status_code}: {e.response.text[:300]}")
             raise
