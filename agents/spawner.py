@@ -304,6 +304,17 @@ if __name__ == "__main__":
 '''
 
 
+def _to_float(val, default: float = 5000.0) -> float:
+    """Convert LLM monetary values like '$2,000' or '2000' to float safely."""
+    try:
+        if isinstance(val, (int, float)):
+            return float(val)
+        cleaned = str(val).replace("$", "").replace(",", "").strip()
+        return float(cleaned)
+    except (ValueError, TypeError):
+        return default
+
+
 class AgentSpawner:
     """
     System 1 — Autonomously infers and builds adjacent agents after the primary build.
@@ -393,7 +404,7 @@ class AgentSpawner:
                 trigger=raw_agent.get("trigger", ""),
                 what_it_does=raw_agent.get("what_it_does", ""),
                 tools_required=raw_agent.get("tools_required", []),
-                estimated_annual_value=float(raw_agent.get("estimated_annual_value", 5000)),
+                estimated_annual_value=_to_float(raw_agent.get("estimated_annual_value", 5000)),
                 value_description=raw_agent.get("value_description", ""),
                 code=code,
                 status="built",

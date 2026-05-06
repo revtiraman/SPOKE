@@ -212,14 +212,24 @@ class LLMClient:
                     except json.JSONDecodeError:
                         pass
 
-        # Last resort: if text looks like it's the inside of a JSON object
-        # (starts with a key), wrap it and try again
+        # Last resort: LLM returned the inside of an object/array without outer brackets.
+        # e.g. `\n  "id": "arch_a", "name": "Foo"` → wrap as object, then as array item
         stripped = text.strip().lstrip('\n ')
         if stripped.startswith('"') and ':' in stripped:
-            try:
-                return json.loads('{' + stripped + ('' if stripped.endswith('}') else '}'))
-            except json.JSONDecodeError:
-                pass
+            # Try as single object
+            for wrapper in (('{\n', '\n}'), ('[{\n', '\n}]')):
+                try:
+                    return json.loads(wrapper[0] + stripped + wrapper[1])
+                except json.JSONDecodeError:
+                    pass
+            # Try repairing then wrapping
+            import re as _re
+            repaired = _re.sub(r',\s*([\}\]])', r'\1', stripped)
+            for wrapper in (('{\n', '\n}'), ('[{\n', '\n}]')):
+                try:
+                    return json.loads(wrapper[0] + repaired + wrapper[1])
+                except json.JSONDecodeError:
+                    pass
 
         logger.error(f"JSON parse failed. Raw[:300]: {text[:300]}")
         raise ValueError(f"LLM returned invalid JSON: {text[:200]}")
