@@ -40,7 +40,11 @@ if [ "$MODE" = "web" ]; then
     echo "  🚀 SPOKE Genesis — Production Web UI"
     echo "  → Open http://localhost:8000"
     echo ""
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # Only watch source dirs — excluding storage/ prevents auto-restart when
+    # generated agent files are written to disk during a pipeline run.
+    uvicorn main:app --host 0.0.0.0 --port 8000 --reload \
+      --reload-dir agents --reload-dir api --reload-dir core \
+      --reload-dir llm --reload-dir frontend
 
 elif [ "$MODE" = "genesis" ]; then
     echo ""
@@ -63,5 +67,7 @@ else
     echo "  → Docs: http://localhost:8000/docs"
     echo "  → Web UI: http://localhost:8000/"
     echo ""
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    uvicorn main:app --host 0.0.0.0 --port 8000 --reload \
+      --reload-dir agents --reload-dir api --reload-dir core \
+      --reload-dir llm --reload-dir frontend
 fi
